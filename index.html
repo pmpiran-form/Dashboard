@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>چالش تصمیم‌گیری با داده | PMPiran</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220;--card:#131c30;--card2:#1a2540;--line:#2a3757;
+  --txt:#e8edf7;--mut:#8f9bb8;--acc:#2dd4bf;--acc2:#38bdf8;
+  --ok:#34d399;--bad:#f87171;--warn:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Vazirmatn',Tahoma,sans-serif;background:radial-gradient(1200px 600px at 80% -10%,#16315a55,transparent),var(--bg);color:var(--txt);min-height:100vh;line-height:1.8}
+.wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+.screen{display:none;animation:fade .4s}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+h1{font-size:30px;font-weight:800;line-height:1.5}
+h2{font-size:20px;font-weight:800}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px}
+.btn{display:inline-block;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#04141c;font-family:inherit;font-weight:800;font-size:17px;border:0;border-radius:12px;padding:13px 26px;cursor:pointer;transition:.2s;text-decoration:none}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px #2dd4bf44}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);font-weight:600;font-size:14px;padding:9px 16px}
+.btn.ghost:hover{box-shadow:none;border-color:var(--acc)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.tag{display:inline-block;font-size:12px;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:1px 12px}
+.mut{color:var(--mut)}
+.hero{text-align:center;padding:40px 0 10px}
+.hero .emoji{font-size:56px}
+.hero p{max-width:560px;margin:14px auto}
+.rules{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:22px 0}
+.rules div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14px}
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:3px 14px}
+.timer{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:10px}
+.timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .25s linear,background .3s}
+.timer.low i{background:var(--bad)}
+.msg{border-right:4px solid var(--warn);background:#fbbf2410;padding:12px 16px;border-radius:10px;margin-top:14px}
+.msg b{color:var(--warn)}
+/* sheet */
+.sheet-wrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:10px;background:#0e1526}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:420px}
+th,td{padding:7px 12px;text-align:center;border:1px solid #243050;white-space:nowrap}
+th{background:#1b3a2f;color:#b9f5dc;font-weight:600}
+td:first-child{text-align:right;background:#162039}
+tr.hl td{background:#1d2a4a}
+.q{font-size:18px;font-weight:800;margin:20px 0 10px}
+.opt{display:block;width:100%;text-align:right;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:9px;font-family:inherit;font-size:15px;cursor:pointer;transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--acc);transform:translateX(-3px)}
+.opt:disabled{cursor:default}
+.opt.ok{background:#34d39922;border-color:var(--ok)}
+.opt.bad{background:#f8717122;border-color:var(--bad)}
+.hintbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.viz{margin-top:12px;background:#0e1526;border:1px dashed var(--acc);border-radius:12px;padding:14px}
+.viz h4{font-size:14px;color:var(--acc);margin-bottom:8px}
+.bar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+.bar span.l{width:90px;flex:none}
+.bar .tr{flex:1;height:14px;background:#1d2845;border-radius:99px;position:relative;overflow:hidden}
+.bar .tr i{position:absolute;right:0;top:0;bottom:0;border-radius:99px}
+.bar .v{width:46px;flex:none;text-align:left;direction:ltr}
+.fb{margin-top:16px;border-radius:12px;padding:14px 16px;background:var(--card2);border:1px solid var(--line)}
+.fb.good{border-color:var(--ok)}
+.fb.wrong{border-color:var(--bad)}
+.fb h3{font-size:16px;margin-bottom:4px}
+.fb .insight{margin-top:10px;font-size:14px;color:var(--acc);border-top:1px dashed var(--line);padding-top:8px}
+/* heat */
+.heat{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:340px;margin:8px auto}
+.heat div{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#04141c}
+/* result */
+.score{text-align:center}
+.score .big{font-size:64px;font-weight:800;color:var(--acc);line-height:1.2}
+.type{font-size:26px;font-weight:800;margin:4px 0}
+.meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px}
+.meter{background:var(--card2);border-radius:12px;padding:12px;border:1px solid var(--line)}
+.meter .tr{height:8px;background:#0e1526;border-radius:99px;overflow:hidden;margin-top:6px}
+.meter .tr i{display:block;height:100%;background:var(--acc)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.kpi{background:#0e1526;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:26px}
+.kpi small{color:var(--mut)}
+.cta{text-align:center;background:linear-gradient(160deg,#12304a,#0f2038);border:1px solid var(--acc);border-radius:18px;padding:26px 18px;margin-top:20px}
+.cta h2{margin-bottom:6px}
+.cta ul{list-style:none;margin:12px auto 18px;max-width:430px;text-align:right;font-size:15px}
+.cta li:before{content:"✓ ";color:var(--ok);font-weight:800}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+footer{text-align:center;color:var(--mut);font-size:12px;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- START -->
+<section class="screen on" id="s-start">
+  <div class="hero">
+    <div class="emoji">🎯</div>
+    <h1>می‌تونی یک پروژه یا کسب‌وکار رو از بحران نجات بدی؟</h1>
+    <p class="mut">چندصد ردیف داده و گزارش اکسل جلوی توئه و مدیرعامل فقط چند دقیقه فرصت داره تا از وضعیت مجموعه مطلع بشه. فرقی نمی‌کنه تو کارخونه باشی، فروشگاه، بیمارستان، شرکت خدماتی یا پروژه. تصمیم با توئه.</p>
+    <div class="rules">
+      <div>📁 ۵ موقعیت واقعی کاری</div>
+      <div>⏱ ۴۵ ثانیه برای هر تصمیم</div>
+      <div>🏆 امتیاز از ۱۰۰</div>
+      <div>🧠 کشف تیپ تحلیلی تو</div>
+    </div>
+    <button class="btn" onclick="startGame()">شروع چالش 🚀</button>
+    <p class="mut" style="font-size:13px;margin-top:16px">چالش تعاملی PMPiran</p>
+  </div>
+</section>
+
+<!-- ROUND -->
+<section class="screen" id="s-round">
+  <div class="top">
+    <span class="pill" id="r-num"></span>
+    <span class="pill">امتیاز: <b id="r-score">۰</b></span>
+  </div>
+  <div class="timer" id="timer"><i></i></div>
+  <div class="card">
+    <span class="tag" id="r-title"></span>
+    <div class="msg" id="r-msg"></div>
+    <div class="sheet-wrap"><table id="r-table"></table></div>
+    <div class="q" id="r-q"></div>
+    <div id="r-opts"></div>
+    <div class="hintbar" id="r-hintbar">
+      <button class="btn ghost" id="hintBtn" onclick="useHint()">🔍 نمای تصویری خلاصه‌شده (−۳ امتیاز)</button>
+      <span class="mut" style="font-size:13px">سرعت + دقت = امتیاز بیشتر</span>
+    </div>
+    <div id="r-viz"></div>
+    <div id="r-fb"></div>
+    <div style="text-align:center;margin-top:16px"><button class="btn" id="nextBtn" style="display:none" onclick="nextRound()">ادامه ←</button></div>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section class="screen" id="s-end">
+  <div class="card score">
+    <span class="tag">نتیجه چالش</span>
+    <div class="big" id="e-score"></div>
+    <div class="mut">از ۱۰۰ امتیاز</div>
+    <div class="type" id="e-type"></div>
+    <p id="e-desc" class="mut" style="max-width:560px;margin:0 auto"></p>
+    <div class="meters" id="e-meters"></div>
+    <p id="e-compare" style="margin-top:14px;font-size:14px"></p>
+  </div>
+
+  <div class="card">
+    <h2>📊 همین مجموعه، این بار با یک داشبورد</h2>
+    <p class="mut" style="font-size:14px">همه‌ی چیزهایی که توی ۵ مرحله‌ی قبل دنبالش بودی، روی یک صفحه و قابل فهم در چند ثانیه:</p>
+    <div class="kpis">
+      <div class="kpi"><small>تحقق هدف فروش</small><b style="color:var(--warn)">۸۸٪</b><small>۶۰ میلیون کمتر از هدف</small></div>
+      <div class="kpi"><small>حاشیه سود (هدف ۲۰٪)</small><b style="color:var(--bad)">۹٪</b><small>کمتر از نصف هدف ⚠️</small></div>
+      <div class="kpi"><small>واحد در خطر بودجه</small><b style="color:var(--warn)">بازاریابی</b><small>۸۰٪ بودجه، ۵۰٪ نتیجه</small></div>
+      <div class="kpi"><small>گلوگاه تیم</small><b style="color:var(--warn)">۵۸ ساعت</b><small>۱۸ ساعت بیش از ظرفیت</small></div>
+      <div class="kpi"><small>ریسک اول</small><b style="color:var(--bad)">۲۰</b><small>تغییرات مکرر خواسته‌ها</small></div>
+    </div>
+    <p style="margin-top:14px;font-size:15px">این‌ها خروجی چند فرمول و چند نمودار است، نه جادو، و در هر صنعتی به یک شکل کار می‌کند. ابزارش همان اکسل و پاوربی‌آی است که هر روز بازش می‌کنی؛ فقط باید بدانی داده را چطور به <b>تصمیم</b> تبدیل کنی.</p>
+  </div>
+
+  <div class="cta">
+    <h2>مدیرعامل‌ها دنبال جدول نیستند، دنبال تصمیم‌اند</h2>
+    <p class="mut" style="font-size:14px">اگر توی این چالش حس کردی «کاش یک صفحه‌ی مرتب جلوم بود»، همین مهارت قابل یادگیری است.</p>
+    <ul>
+      <li>ساخت داشبورد مدیریتی با اکسل و پاوربی‌آی</li>
+      <li>شاخص‌های کلیدی (هزینه، زمان، ریسک، منابع) روی یک صفحه</li>
+      <li>گزارشی که مدیرعامل در چند دقیقه می‌خواند</li>
+    </ul>
+    <a class="btn" id="ctaBtn" href="#" target="_blank" rel="noopener">با دوره‌ی طراحی داشبورد آشنا شو 🚀</a>
+    <div class="row">
+      <button class="btn ghost" onclick="shareResult()">📤 کپی نتیجه برای اشتراک‌گذاری</button>
+      <button class="btn ghost" onclick="startGame()">🔄 دوباره تلاش کن</button>
+    </div>
+    <p id="copied" class="mut" style="font-size:13px;margin-top:8px;min-height:20px"></p>
+  </div>
+</section>
+
+<footer>PMPiran · چالش تعاملی تصمیم‌گیری با داده</footer>
+</div>
+
+<script>
+/* ====== تنظیمات: لینک دوره را اینجا بگذارید ====== */
+const COURSE_URL = "https://my.pmpiran.com/login?redirect=/online-courses/9003";
+const GAME_URL = "";   // اختیاری: لینک این بازی برای متن اشتراک‌گذاری
+/* ================================================= */
+
+const fa = n => String(n).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+const TIME = 45;
+
+const rounds = [
+ {
+  tag:"وضعیت کلی کسب‌وکار",
+  msg:"<b>پیام فوری مدیرعامل:</b> «ده دقیقه دیگه جلسه‌ی هیئت‌مدیره‌ست. هدف ما فروش ۵۰۰ میلیون و حاشیه سود ۲۰٪ بود. الان دقیقاً کجاییم؟»",
+  head:["واحد / شعبه / خط محصول","هدف فروش (میلیون)","فروش واقعی (میلیون)","هزینه تمام‌شده (میلیون)"],
+  rows:[["واحد الف",120,125,100],["واحد ب",100,90,85],["واحد ج",90,70,75],["واحد د",80,60,60],["واحد هـ",60,55,50],["واحد و",50,40,30]],
+  q:"با جمع‌بندی اعداد، وضعیت واقعی چیست؟",
+  opts:[
+   {t:"همه چیز خوب است؛ فروش تقریباً به هدف رسیده",ok:0},
+   {t:"فروش حدود ۸۸٪ هدف است و حاشیه سود حدود ۹٪ (کمتر از نصف هدف ۲۰٪)؛ مشکل اصلی سودآوری است",ok:1},
+   {t:"فقط واحد الف مشکل دارد",ok:0},
+   {t:"فروش از هدف بیشتر شده و سود عالی است",ok:0}
+  ],
+  why:"جمع فروش ۴۴۰ از ۵۰۰ است (۸۸٪) و جمع هزینه ۴۰۰ است، پس سود ۴۰ و حاشیه سود حدود ۹٪ می‌شود. اگر فقط به فروش نگاه کنیم، اصل بحران یعنی افت سودآوری دیده نمی‌شود.",
+  insight:"💡 دو عدد (تحقق هدف و حاشیه سود) کل جدول را خلاصه می‌کنند؛ مشکل اینجاست که معمولاً کسی آن‌ها را آماده جلوی مدیرعامل نمی‌گذارد.",
+  viz(){return vizBars("درصد تحقق (خط سفید = هدف)",[["تحقق فروش",88,100,"var(--bad)"],["حاشیه سود",9,20,"var(--bad)"]],v=>fa(Math.round(v))+"٪",100);}
+ },
+ {
+  tag:"کنترل بودجه",
+  msg:"<b>مدیر مالی:</b> «هشت ماه از سال گذشته و بودجه داره سریع مصرف می‌شه. قبل از اینکه دیر بشه بگو کجا باید دخالت کنیم؟»",
+  head:["واحد","بودجه سالانه (میلیون)","هزینه‌شده تا امروز (میلیون)","اهداف محقق‌شده"],
+  rows:[["عملیات",100,95,"۱۰۰٪"],["بازاریابی",300,240,"۵۰٪"],["آموزش و توسعه",150,20,"۱۰٪"],["فناوری اطلاعات",80,0,"۰٪"]],
+  q:"کدام واحد بیشترین خطر را دارد که بودجه تمام شود و به هدف نرسد؟",
+  opts:[
+   {t:"عملیات، چون ۹۵٪ بودجه‌اش مصرف شده",ok:0},
+   {t:"بازاریابی، چون ۸۰٪ بودجه رفته ولی فقط نصف هدف محقق شده",ok:1},
+   {t:"آموزش، چون بودجه‌اش تقریباً دست‌نخورده است",ok:0},
+   {t:"فناوری اطلاعات، چون هنوز خرجی نکرده",ok:0}
+  ],
+  why:"عملیات با ۹۵٪ هزینه، ۱۰۰٪ هدف را گرفته و سالم است. بازاریابی ۸۰٪ بودجه را مصرف کرده و فقط ۵۰٪ نتیجه دارد؛ اگر روند ادامه پیدا کند، نیمه‌ی دیگر هدف بودجه‌ای ندارد.",
+  insight:"💡 عدد هزینه‌ی تنها گمراه‌کننده است؛ مقایسه‌ی «هزینه با نتیجه» حقیقت را نشان می‌دهد.",
+  viz(){return `<h4>مصرف بودجه در برابر نتیجه (٪)</h4>`+[["عملیات",95,100],["بازاریابی",80,50],["آموزش",13,10],["فناوری",0,0]].map(r=>
+     `<div class="bar"><span class="l">${r[0]}</span><div class="tr"><i style="width:${r[1]}%;background:var(--warn);opacity:.9"></i></div><span class="v">${fa(r[1])}٪</span></div>
+      <div class="bar"><span class="l mut">نتیجه</span><div class="tr"><i style="width:${r[2]}%;background:${r[1]-r[2]>20?'var(--bad)':'var(--ok)'}"></i></div><span class="v">${fa(r[2])}٪</span></div>`).join("");}
+ },
+ {
+  tag:"مدیریت ظرفیت تیم",
+  msg:"<b>مدیر عملیات:</b> «تیم کم آورده و تحویل سفارش‌های مهم دچار تأخیر شده. ظرفیت هفتگی هر نفر ۴۰ ساعته. چه تصمیمی بگیرم؟»",
+  head:["همکار","ساعت کاری تخصیص‌یافته در هفته","مسئول کار حیاتی؟"],
+  rows:[["علی (کارشناس ارشد)",58,"بله"],["سارا (کارشناس)",36,"خیر"],["رضا (کارشناس)",44,"خیر"],["مینا (کارشناس ارشد)",22,"خیر"],["نیما (کارشناس)",30,"بله"]],
+  q:"بهترین اقدام فوری کدام است؟",
+  opts:[
+   {t:"استخدام نیروی جدید و صبر کردن تا جذب و آموزش شود",ok:0},
+   {t:"درخواست اضافه‌کاری از علی تا کارها زودتر برسد",ok:0},
+   {t:"انتقال بخشی از کارهای علی به مینا که ظرفیت آزاد و تخصص مشابه دارد",ok:1},
+   {t:"عقب انداختن مهلت همه‌ی تعهدات",ok:0}
+  ],
+  why:"علی هم ۱۸ ساعت بالاتر از ظرفیت است و هم مسئول کار حیاتی است. مینا همان سطح تخصص را دارد و ۱۸ ساعت ظرفیت آزاد دارد. جابه‌جایی بار سریع‌ترین و کم‌هزینه‌ترین راه است؛ اضافه‌کاری خطر فرسودگی و خطا دارد و استخدام دیر اثر می‌کند.",
+  insight:"💡 وقتی بار کاری روی یک نمودار دیده شود، گلوگاه در یک نگاه مشخص است؛ در جدول باید تک‌تک اعداد را مقایسه کرد.",
+  viz(){return `<h4>بار کاری هفتگی (خط سفید: ظرفیت ۴۰ ساعت)</h4>`+[["علی",58],["سارا",36],["رضا",44],["مینا",22],["نیما",30]].map(r=>
+     `<div class="bar"><span class="l">${r[0]}</span><div class="tr"><i style="width:${r[1]/60*100}%;background:${r[1]>40?'var(--bad)':'var(--ok)'}"></i><b style="position:absolute;right:${40/60*100}%;top:0;bottom:0;width:2px;background:#fff"></b></div><span class="v">${fa(r[1])}</span></div>`).join("");}
+ },
+ {
+  tag:"مدیریت ریسک",
+  msg:"<b>مدیرعامل:</b> «ریسک‌های پیش‌رو زیاده و نمی‌تونیم همه رو همزمان مدیریت کنیم. اول کدوم رو بگیریم؟»",
+  head:["کد","ریسک","احتمال (۱ تا ۵)","شدت اثر (۱ تا ۵)"],
+  rows:[["R1","تأخیر تأمین‌کننده در تحویل مواد یا تجهیزات",4,2],["R2","خروج یکی از افراد کلیدی",2,5],["R3","تغییرات مکرر خواسته‌ها از سمت مشتری",5,4],["R4","مشکل در تمدید مجوز یا لایسنس",3,3]],
+  q:"کدام ریسک باید اولویت اول مدیریت باشد؟",
+  opts:[
+   {t:"R1: تأخیر تأمین‌کننده",ok:0},
+   {t:"R2: خروج فرد کلیدی، چون شدت اثرش حداکثر است",ok:0},
+   {t:"R3: تغییرات مکرر خواسته‌های مشتری",ok:1},
+   {t:"R4: مشکل مجوز",ok:0}
+  ],
+  why:"امتیاز ریسک = احتمال × شدت اثر. R1=۸، R2=۱۰، R3=۲۰، R4=۹. تغییر مکرر خواسته‌ها هم محتمل‌ترین است و هم اثر بالایی دارد.",
+  insight:"💡 ماتریس ریسک رنگی همین محاسبه را بدون ماشین‌حساب نشان می‌دهد؛ قرمزها اول دیده می‌شوند.",
+  viz(){
+    const pos={"4-2":"R1","2-5":"R2","5-4":"R3","3-3":"R4"};let h="";
+    for(let i=5;i>=1;i--)for(let p=5;p>=1;p--){const s=i*p;const c=s>=15?"#f87171":s>=8?"#fbbf24":"#34d399";const k=p+"-"+i;h+=`<div style="background:${c};${pos[k]?'outline:3px solid #fff':''}">${pos[k]||""}</div>`;}
+    return `<h4>ماتریس ریسک (افقی: احتمال، عمودی: شدت اثر)</h4><div class="heat">${h}</div>`;}
+ },
+ {
+  tag:"گزارش به مدیرعامل",
+  msg:"<b>دفتر مدیرعامل:</b> «مدیرعامل فقط ۲ دقیقه وقت دارد. گزارش یک‌صفحه‌ای‌ات چه چیزی باید داشته باشد؟»",
+  head:["گزینه‌ی گزارش","حجم"],
+  rows:[["جدول کامل همه‌ی داده‌ها و تراکنش‌ها","۴۰۰ ردیف"],["گزارش جامع با همه‌ی نمودارها","۱۲ صفحه"],["فقط یک عدد: درصد تحقق کل هدف","۱ عدد"]],
+  q:"کدام ترکیب برای یک گزارش مدیریتی درست‌تر است؟",
+  opts:[
+   {t:"جدول کامل داده‌ها با توضیح هر ردیف تا چیزی جا نماند",ok:0},
+   {t:"وضعیت شاخص‌های کلیدی نسبت به هدف، پیش‌بینی پایان دوره، ۳ ریسک برتر و تصمیمی که از مدیرعامل لازم است",ok:1},
+   {t:"فقط درصد تحقق کل تا نگرانی ایجاد نشود",ok:0},
+   {t:"گزارش ۱۲ صفحه‌ای با همه‌ی نمودارها",ok:0}
+  ],
+  why:"مدیرعامل سه سؤال دارد: الان کجاییم؟ به کجا می‌رسیم؟ از من چه می‌خواهید؟ گزارش خوب فقط به همین‌ها جواب می‌دهد و جزئیات را در لایه‌ی بعدی نگه می‌دارد.",
+  insight:"💡 مهارت اصلی، جمع کردن داده نیست؛ انتخاب و نمایش چیزی است که تصمیم‌گیر لازم دارد.",
+  noHint:true
+ }
+];
+
+function vizBars(title,items,fmt,max){
+  return `<h4>${title}</h4>`+items.map(i=>`<div class="bar"><span class="l">${i[0]}</span><div class="tr"><i style="width:${i[1]/max*100}%;background:${i[3]}"></i><b style="position:absolute;right:${i[2]/max*100}%;top:0;bottom:0;width:2px;background:#fff"></b></div><span class="v">${fmt(i[1])}</span></div>`).join("");
+}
+
+let cur=0,score=0,tLeft=TIME,tick=null,answered=false,hinted=false,log=[];
+const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");window.scrollTo({top:0,behavior:"smooth"});}
+
+function startGame(){cur=0;score=0;log=[];show("s-round");loadRound();}
+
+function loadRound(){
+  const r=rounds[cur];answered=false;hinted=false;
+  $("r-num").textContent=`مرحله ${fa(cur+1)} از ${fa(rounds.length)}`;
+  $("r-score").textContent=fa(score);
+  $("r-title").textContent=r.tag;
+  $("r-msg").innerHTML=r.msg;
+  $("r-table").innerHTML="<tr>"+r.head.map(h=>`<th>${h}</th>`).join("")+"</tr>"+r.rows.map(row=>"<tr>"+row.map(c=>`<td>${typeof c==="number"?fa(c):c}</td>`).join("")+"</tr>").join("");
+  $("r-q").textContent=r.q;
+  $("r-opts").innerHTML=r.opts.map((o,i)=>`<button class="opt" onclick="answer(${i})">${o.t}</button>`).join("");
+  $("r-viz").innerHTML="";$("r-fb").innerHTML="";
+  $("nextBtn").style.display="none";
+  $("hintbar").style.display=r.noHint?"none":"flex";$("hintBtn").disabled=false;
+  $("nextBtn").textContent=cur===rounds.length-1?"دیدن نتیجه 🏆":"ادامه ←";
+  tLeft=TIME;updTimer();clearInterval(tick);
+  tick=setInterval(()=>{tLeft-=0.25;updTimer();if(tLeft<=0){clearInterval(tick);answer(-1);}},250);
+}
+function updTimer(){
+  const t=$("timer");t.firstElementChild.style.width=Math.max(0,tLeft/TIME*100)+"%";
+  t.classList.toggle("low",tLeft<10);
+}
+function useHint(){
+  if(answered||hinted)return;hinted=true;$("hintBtn").disabled=true;
+  $("r-viz").innerHTML=`<div class="viz">${rounds[cur].viz()}</div>`;
+}
+function answer(i){
+  if(answered)return;answered=true;clearInterval(tick);
+  const r=rounds[cur];const correct=i>=0&&r.opts[i].ok===1;
+  const used=TIME-Math.max(0,tLeft);
+  let pts=0;
+  if(correct){pts=14+Math.round(6*Math.max(0,tLeft)/TIME)-(hinted?3:0);pts=Math.max(pts,5);}
+  score+=pts;$("r-score").textContent=fa(score);
+  log.push({correct,time:used,hinted,pts});
+  document.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(r.opts[k].ok)b.classList.add("ok");else if(k===i)b.classList.add("bad");});
+  $("hintBtn").disabled=true;
+  const head=i<0?"⏰ زمان تمام شد":(correct?`✅ درست! ${fa(pts)} امتیاز`:"❌ این بار نشد");
+  $("r-fb").innerHTML=`<div class="fb ${correct?'good':'wrong'}"><h3>${head}</h3><div>${r.why}</div><div class="insight">${r.insight}</div></div>`;
+  $("nextBtn").style.display="inline-block";
+}
+function nextRound(){
+  if(cur>=rounds.length-1){finish();return;}
+  cur++;loadRound();
+}
+
+function finish(){
+  show("s-end");
+  const nCorrect=log.filter(l=>l.correct).length;
+  const avg=log.reduce((a,l)=>a+l.time,0)/log.length;
+  $("e-score").textContent=fa(score);
+  let type,desc;
+  if(score>=85){type="🏛 معمار داشبورد";desc="هم سریع دیدی، هم درست. تو داده را به تصمیم تبدیل می‌کنی. حالا فقط کافی است این نگاه را در یک داشبورد حرفه‌ای ثابت کنی تا کل سازمان از آن استفاده کند.";}
+  else if(score>=65){type="🔎 تحلیل‌گر دقیق";desc="مسیر را درست می‌بینی و اغلب تصمیم‌هایت دقیق بود. با ابزار بصری مناسب، همین دقت را در زمان خیلی کمتری می‌گیری.";}
+  else if(score>=40){type="🧭 مدیر شهودی";desc="غریزه‌ی خوبی داری ولی در حجم زیاد داده، بعضی نشانه‌ها از دستت رفت. این دقیقاً جایی است که داشبورد کمک می‌کند.";}
+  else{type="🌊 غرق در داده";desc="کار تو نیست؛ مشکل اینجاست که جدول‌های خام حتی برای باتجربه‌ها هم سنگین است. مسئله ابزار و روش نمایش است، نه توانایی تو.";}
+  $("e-type").textContent=type;$("e-desc").textContent=desc;
+  const acc=Math.round(nCorrect/log.length*100);
+  const spd=Math.round(Math.max(0,1-avg/TIME)*100);
+  const nh=log.filter(l=>l.hinted).length;
+  $("e-meters").innerHTML=[["🎯 دقت تصمیم‌ها",acc],["⚡ سرعت تحلیل",spd],["📊 استفاده از نمای تصویری",Math.round(nh/4*100)]].map(m=>
+    `<div class="meter"><div>${m[0]}: <b>${fa(m[1])}٪</b></div><div class="tr"><i style="width:${m[1]}%"></i></div></div>`).join("");
+  const w=log.filter(l=>l.hinted),wo=log.filter((l,k)=>!l.hinted&&!rounds[k].noHint);
+  const mean=a=>a.reduce((s,l)=>s+l.time,0)/a.length;
+  let cmp=`میانگین زمان تصمیم‌گیری تو: <b>${fa(Math.round(avg))} ثانیه</b> برای هر موقعیت.`;
+  if(w.length&&wo.length)cmp+=` در مراحلی که نمای تصویری را دیدی میانگین <b>${fa(Math.round(mean(w)))} ثانیه</b> و در بقیه <b>${fa(Math.round(mean(wo)))} ثانیه</b> بود.`;
+  $("e-compare").innerHTML=cmp;
+  $("ctaBtn").href=COURSE_URL;
+}
+
+function shareResult(){
+  const txt=`من توی چالش «تصمیم‌گیری با داده» PMPiran ${fa(score)} از ۱۰۰ امتیاز گرفتم و تیپ تحلیلی‌ام شد: ${$("e-type").textContent}\nتو هم امتحان کن! ${GAME_URL}`.trim();
+  const done=()=>{$("copied").textContent="✅ متن کپی شد؛ می‌تونی توی گروه بفرستی.";};
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(done).catch(()=>prompt("کپی کن:",txt));
+  else prompt("کپی کن:",txt);
+}
+</script>
+</body>
+</html>
